@@ -3,6 +3,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -13,12 +14,14 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from submission import ROOT, git, read_plugin, version
+from route_feedback import LOGIN
+from submission import PLUGIN_ID, ROOT, git, read_plugin, version
 
 GITEE_PATH = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 MIRROR_BRANCH = "master"
 ZIP_LIMIT = 576 * 1024
 CATALOG_LIMIT = 64 * 1024
+METRICS_DIR = ROOT / "services" / "market-metrics"
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -103,6 +106,10 @@ def pack_reviewed(workspace, island, plugin_id):
     git(ROOT, "fetch", "origin", "refs/heads/main")
     commit = git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip()
     manifest, files = read_plugin(ROOT, commit, plugin_id)
+    maintainers = json.loads(git(ROOT, "show", f"{commit}:.github/plugin-maintainers.json"))
+    login = maintainers.get(plugin_id) if isinstance(maintainers, dict) else None
+    if not isinstance(login, str) or len(login) > 39 or not LOGIN.fullmatch(login):
+        raise ValueError(f"请在 GitHub 主分支的 .github/plugin-maintainers.json 登记 {plugin_id} 的维护者账号后再上架")
     source = workspace / "package"
     source.mkdir()
     for name, data in files.items():
@@ -148,7 +155,28 @@ def write_prepared(directory, name, data):
         raise ValueError(f"输出目录里的 {name} 内容不同，请使用新目录")
 
 
-def publish(island, plugin_id, mirror_url, channel, prepare=None):
+def metrics_registration(channel, plugin_id, current):
+    if (channel not in ("preview", "stable") or len(plugin_id) > 64
+            or not PLUGIN_ID.fullmatch(plugin_id)):
+        raise ValueError("统计登记的频道或插件 ID 无效")
+    version(current)
+    return (
+        "INSERT INTO metric_plugins (channel, plugin_id) VALUES "
+        f"('{channel}', '{plugin_id}') ON CONFLICT(channel, plugin_id) DO NOTHING;\n"
+        "INSERT INTO metric_versions (channel, plugin_id, version) VALUES "
+        f"('{channel}', '{plugin_id}', '{current}') "
+        "ON CONFLICT(channel, plugin_id, version) DO NOTHING;\n"
+    ).encode("ascii")
+
+
+def register_metrics(path, registration):
+    path.write_bytes(registration)
+    npx = "npx.cmd" if os.name == "nt" else "npx"
+    subprocess.run([npx, "wrangler", "d1", "execute", "daozai-market-metrics", "--remote",
+                    "--yes", "--file", str(path)], cwd=METRICS_DIR, check=True)
+
+
+def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False):
     base_url = publish_origin(mirror_url)
     with tempfile.TemporaryDirectory(prefix="daozai-market-") as temporary:
         workspace = Path(temporary)
@@ -157,6 +185,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None):
         zip_remote = f"{channel}/{zip_name}"
         catalog_remote = f"{channel}/catalog.json"
         data = bundle.read_bytes()
+        registration = metrics_registration(channel, plugin_id, current) if metrics else None
 
         if prepare is None:
             mirror = workspace / "mirror"
@@ -179,6 +208,12 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None):
                               plugin_id, current, data)
         if index is None:
             verify_public_package(base_url, zip_remote, data)
+            if registration is not None:
+                if prepare is None:
+                    register_metrics(workspace / "metrics.sql", registration)
+                else:
+                    prepare.mkdir(parents=True, exist_ok=True)
+                    write_prepared(prepare, "metrics.sql", registration)
             print(f"{plugin_id} {current} 已发布")
             return
 
@@ -186,6 +221,8 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None):
             prepare.mkdir(parents=True, exist_ok=True)
             write_prepared(prepare, zip_name, data)
             write_prepared(prepare, "catalog.json", index)
+            if registration is not None:
+                write_prepared(prepare, "metrics.sql", registration)
             print(f"{plugin_id} {current} 已准备，尚未发布")
             print(f"审定提交 {commit}")
             print(f"安装包 SHA-256 {hashlib.sha256(data).hexdigest()}")
@@ -196,6 +233,8 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None):
             zip_path.write_bytes(data)
             git_commit_push(mirror, zip_remote, f"同步 {plugin_id} {current} 安装包")
         verify_public_package(base_url, zip_remote, data)
+        if registration is not None:
+            register_metrics(workspace / "metrics.sql", registration)
         catalog.write_bytes(index)
         git_commit_push(mirror, catalog_remote, f"上架 {plugin_id} {current}")
         print(f"{plugin_id} {current} 已发布到 {channel} 目录")
@@ -208,9 +247,10 @@ if __name__ == "__main__":
     parser.add_argument("--mirror", required=True, help="Gitee 公开镜像仓库 Git 地址")
     parser.add_argument("--channel", choices=("preview", "stable"), required=True)
     parser.add_argument("--prepare", type=Path, help="导出待发布文件的目录")
+    parser.add_argument("--metrics", action="store_true", help="推送索引前登记统计版本，导出模式生成 metrics.sql")
     options = parser.parse_args()
     try:
         publish(options.island.resolve(strict=True), options.plugin_id, options.mirror,
-                options.channel, options.prepare)
+                options.channel, options.prepare, options.metrics)
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
         sys.exit(str(error))

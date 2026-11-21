@@ -1,0 +1,8 @@
+name = "daozai-market-metrics"
+main = "worker.mjs"
+compatibility_date = "2026-02-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "daozai-market-metrics"
+database_id = "f65d0c56-e23f-452e-8d92-b8483c6aaa1e"
