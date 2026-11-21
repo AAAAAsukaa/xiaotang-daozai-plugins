@@ -1,0 +1,16 @@
+{
+  "id": "daozai.lunar-today",
+  "name": "今日农历",
+  "author": "岛仔",
+  "version": "1.0.0",
+  "api": 1,
+  "runtime": "js",
+  "entry": "main.js",
+  "cover": "cover.png",
+  "owner": "tasks",
+  "capabilities": ["card", "timer"],
+  "refreshSeconds": 60,
+  "dataVersion": 1,
+  "permissions": {},
+  "settings": []
+}
