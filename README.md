@@ -6,6 +6,10 @@
 
 在 Windows 上用岛仔的 `--plugin-test` 校验并试装，通过后向 `main` 提 PR，填写用途、版本、权限、验证方式、许可和镜像授权。每次更新递增三段式版本号并单独提交 PR。仓库 CI 检查投稿文件和版本，维护者审核行为、授权及本地运行结果。
 
+## 反馈
+
+从插件详情或「我的插件」打开「插件反馈」。普通问题单会按插件 ID 通知登记的维护者，安装和更新问题由仓库维护者跟进。每个新插件上架后，由仓库维护者核对并在 `.github/plugin-maintainers.json` 登记作者或接手维护的 GitHub 账号。安全或隐私问题通过 GitHub 私密报告提交。[普通问题](https://github.com/Renly1994/xiaotang-daozai-plugins/issues) · [私密报告](https://github.com/Renly1994/xiaotang-daozai-plugins/security/advisories/new)
+
 ## 发布
 
 审核并合并后，维护者用启用了插件作者命令的岛仔构建安装包。镜像仓须已初始化默认分支，Git 使用维护者现有的 Gitee 凭据。先将现有样包发布到 `preview` 目录验收，正式上架使用 `stable` 目录。
