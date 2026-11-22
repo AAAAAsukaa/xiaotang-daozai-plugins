@@ -2,11 +2,13 @@
 
 准备 Windows、GitHub 账号和岛仔作者测试版。手里的岛仔如果缺少「设置 → 插件」，请先向维护者获取作者测试版。目前集市接受无外部权限的 JS 待办卡片。
 
-## 1. 复制模板
+## 1. 从模板创建插件
 
 登录 GitHub，在岛仔插件仓点 **Fork**，把仓库复制到自己的账号。用 GitHub Desktop 将自己的 fork 克隆到电脑，从最新的 `main` 新建投稿分支。[岛仔插件仓](https://github.com/Renly1994/xiaotang-daozai-plugins) · [GitHub Desktop 操作说明](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop?platform=windows)
 
-把[发薪倒计时模板](../templates/payday-countdown/)的整个文件夹复制到 fork 的本地仓库，在 `plugins` 下改名为自己的插件 ID，例如 `xiaoming.payday`。最终目录如下。
+在支持这些按钮的作者测试版中，打开「设置 → 插件 → 已安装 → 开发者工具」，点击「从模板创建」，填写「插件 ID」「插件名称」「作者名称」。例如插件 ID 填 `xiaoming.payday`，再选择本地 fork 的 `plugins` 目录。岛仔会创建 `plugins/xiaoming.payday/`，里面是一份可试装的发薪倒计时插件。
+
+使用旧版作者测试版时，也可把[发薪倒计时模板](../templates/payday-countdown/)整个复制到本地 fork 的 `plugins` 目录，以自己的插件 ID 为文件夹名称，再修改 `plugin.json` 的 `id`、`name` 和 `author`。最终目录如下。
 
 ```text
 plugins/xiaoming.payday/
@@ -16,17 +18,19 @@ plugins/xiaoming.payday/
 └── LICENSE
 ```
 
-- 在 `plugin.json` 里修改 `id`、`name`、`author` 和设置默认值。插件 ID 须与目录同名，至少有两个用点分隔的部分，每部分以小写字母开头，其余可用小写字母、数字和连字符，总长最多 64 字符。首版可用 `1.0.0`。
+- 插件 ID 须与目录同名，至少有两个用点分隔的部分，每部分以小写字母开头，其余可用小写字母、数字和连字符，总长最多 64 字符。设置默认值可在 `plugin.json` 中修改，首版可用 `1.0.0`。
 - 在 `main.js` 里修改卡片逻辑。模板的 `refresh` 读取用户设置和当天日期，返回要显示的 `card` 和要保留的 `storage`。待办卡片模板使用 `api: 1`、`runtime: "js"`、`owner: "tasks"` 和空的 `permissions`。
 - 将投稿封面保存为 `cover.png`，使用与插件功能相符且有权分发的图片。封面须为 PNG，建议 16:9，最多 256 KiB，宽高最多 1920 × 1080。
 - 复用模板代码时保留原来的 MIT 版权和许可。投稿可附带 `README.md`、`LICENSE` 或 `LICENSE.txt`。PR 的文件范围限定为 `plugins/<插件 ID>/` 下的允许文件。
 
 ## 2. 试装并校验
 
-1. 在岛仔打开「设置 → 插件 → 我的插件 → 开发者模式」，点击「安装本地插件…」，选择新目录里的 `plugin.json`。
-2. 回到「我的插件」启用插件。确认待办页已开启，在「待办与置物」改一次名称和日期，再打开岛上的待办页，核对卡片内容。
+1. 在同一个「开发者工具」面板点击「安装本地插件…」，选择新目录里的 `plugin.json`。旧版作者测试版的入口是「设置 → 插件 → 我的插件 → 开发者模式」。
+2. 回到「已安装」启用插件。确认待办页已开启，在「待办与置物」改一次名称和日期，再打开岛上的待办页，核对卡片内容。
 3. 修改源码后，选择「保留数据」卸载，再从同一个 `plugin.json` 路径安装并启用，核对原设置和新效果。
-4. 在本地插件仓目录打开 PowerShell，把下例中的程序路径和插件 ID 换成自己的。看到「校验通过」且返回码为 `0` 后，把结果写进 PR。
+4. 在「开发者工具」点「本地校验」，选择同一个 `plugin.json`。校验通过后，把结果写进 PR。
+
+旧版或使用 AI Agent 时，可在本地插件仓目录打开 PowerShell，运行同一套 `--plugin-test` 校验。把下例中的程序路径和插件 ID 换成自己的。返回码 `0` 表示通过。
 
 ```powershell
 $island = 'D:/你的目录/daozai.exe'
@@ -53,7 +57,7 @@ $LASTEXITCODE
 <details>
 <summary>在本地测试集市模拟用户更新</summary>
 
-沿用第 2 步 PowerShell 里的 `$island` 和 `$manifest`。用一个试用配置，先将旧版提交到本地目录，从「开发者模式 → 导入测试集市目录…」选择生成的 `catalog.json`，安装、启用并保存测试设置。
+沿用上方 PowerShell 命令里的 `$island` 和 `$manifest`。用一个试用配置，先将旧版提交到本地目录，从「开发者工具 → 导入测试集市目录…」选择生成的 `catalog.json`，安装、启用并保存测试设置。
 
 ```powershell
 $trial = Join-Path $env:LOCALAPPDATA 'DaozaiPluginTrial/xiaoming.payday'
