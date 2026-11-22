@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -170,6 +171,45 @@ class PluginApprovalTests(unittest.TestCase):
         head = self.commit()
         with self.assertRaises(ValueError):
             self.check(head, OWNER, self.authorization("Alice", head))
+
+
+class PluginApprovalReportingTests(unittest.TestCase):
+    def setUp(self):
+        directory = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        event = directory / "event.json"
+        event.write_text('{"pull_request":{"number":7}}', encoding="utf-8")
+        self.enterContext(patch.dict(os.environ, {
+            "GITHUB_EVENT_PATH": str(event),
+            "GITHUB_REPOSITORY": "owner/plugins",
+            "PLUGIN_APPROVAL_TOKEN": "test-token",
+        }))
+        self.head = "a" * 40
+        self.pull = {
+            "state": "open",
+            "base": {"ref": "main", "sha": "b" * 40, "repo": {"owner": {"login": OWNER}}},
+            "head": {"sha": self.head},
+            "merge_commit_sha": "c" * 40,
+            "user": {"login": "contributor"},
+        }
+
+    def test_reports_the_verified_head_instead_of_the_test_merge_commit(self):
+        with (
+            patch.object(plugin_approval, "git", side_effect=[b"", b"", self.head.encode()]),
+            patch.object(plugin_approval, "api", side_effect=[self.pull, {"id": 1}, {}]) as api,
+            patch.object(plugin_approval, "check_submission"),
+        ):
+            plugin_approval.main()
+        self.assertEqual(api.call_args_list[1].kwargs["data"]["head_sha"], self.head)
+        self.assertEqual(api.call_args_list[2].kwargs["data"]["conclusion"], "success")
+
+    def test_does_not_report_if_pr_head_changed_during_fetch(self):
+        with (
+            patch.object(plugin_approval, "git", side_effect=[b"", b"", b"new-head"]),
+            patch.object(plugin_approval, "api", return_value=self.pull) as api,
+            self.assertRaises(RuntimeError),
+        ):
+            plugin_approval.main()
+        api.assert_called_once_with("repos/owner/plugins/pulls/7")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,8 @@
-"""在主分支验证插件更新授权，并对 GitHub 的试合并提交报告结果。"""
+"""用主分支的维护者登记核验投稿，并对 PR 当前提交报告结果。"""
 import json
 import os
 from pathlib import Path
 import subprocess
-import time
 
 from submission import ROOT, changed_paths, check_pull_request, git
 
@@ -73,38 +72,25 @@ def read_comments(repo, number):
         yield from page
 
 
-def get_mergeable_pull(repo, number):
-    for attempt in range(6):
-        pull = api(f"{repo}/pulls/{number}")
-        if pull["state"] != "open" or pull["base"]["ref"] != "main":
-            return None
-        if pull["mergeable"] is False:
-            return None
-        if pull["mergeable"] and pull["merge_commit_sha"]:
-            return pull
-        time.sleep(2 ** min(attempt, 2))
-    raise RuntimeError("GitHub 尚未生成试合并提交。")
-
-
 def main():
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
     subject = event.get("pull_request") or event.get("issue") or event.get("inputs")
     number = int(subject["number"])
     repo = f"repos/{os.environ['GITHUB_REPOSITORY']}"
-    pull = get_mergeable_pull(repo, number)
-    if pull is None:
+    pull = api(f"{repo}/pulls/{number}")
+    if pull["state"] != "open" or pull["base"]["ref"] != "main":
         return
 
-    base, head, merge = pull["base"]["sha"], pull["head"]["sha"], pull["merge_commit_sha"]
-    git(ROOT, "fetch", "--no-tags", "origin", f"refs/pull/{number}/merge")
-    if (git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip() != merge
-            or git(ROOT, "show", "-s", "--format=%P", merge).decode().split() != [base, head]):
-        raise RuntimeError("试合并提交已变更，请使用最新的检查结果。")
+    base, head = pull["base"]["sha"], pull["head"]["sha"]
+    git(ROOT, "fetch", "--no-tags", "origin", "refs/heads/main")
+    git(ROOT, "fetch", "--no-tags", "origin", f"refs/pull/{number}/head")
+    if git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip() != head:
+        raise RuntimeError("PR 提交已变更，请使用最新的检查结果。")
 
     app_token = os.environ["PLUGIN_APPROVAL_TOKEN"]
     check = api(f"{repo}/check-runs", token=app_token, method="POST", data={
         "name": CHECK_NAME,
-        "head_sha": merge,
+        "head_sha": head,
         "status": "in_progress",
         "external_id": str(number),
     })
