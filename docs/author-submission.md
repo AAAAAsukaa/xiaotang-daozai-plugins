@@ -6,19 +6,22 @@
 
 登录 GitHub，在岛仔插件仓点 **Fork**，把仓库复制到自己的账号。用 GitHub Desktop 将自己的 fork 克隆到电脑，从最新的 `main` 新建投稿分支。[岛仔插件仓](https://github.com/Renly1994/xiaotang-daozai-plugins) · [GitHub Desktop 操作说明](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop?platform=windows)
 
-在支持这些按钮的作者测试版中，打开「设置 → 插件 → 已安装 → 开发者工具」，点击「从模板创建」，填写「插件 ID」「插件名称」「作者名称」。例如插件 ID 填 `xiaoming.payday`，再选择本地 fork 的 `plugins` 目录。岛仔会创建 `plugins/xiaoming.payday/`，里面是一份可试装的发薪倒计时插件。
+以下以「日期倒计时」为例。插件在待办页显示距离目标日期还有多少天，示例 ID 为 `xiaoming.date-countdown`。
 
-使用旧版作者测试版时，也可把[发薪倒计时模板](../templates/payday-countdown/)整个复制到本地 fork 的 `plugins` 目录，以自己的插件 ID 为文件夹名称，再修改 `plugin.json` 的 `id`、`name` 和 `author`。最终目录如下。
+把[日期倒计时模板](../templates/date-countdown/)整个复制到本地 fork 的 `plugins` 目录，以插件 ID 为文件夹名称，再填写 `plugin.json` 中的 `id`、`name` 和 `author`。用于投稿时请填写自己的插件 ID、插件名称和作者名称。
+
+也可在作者测试版中打开「设置 → 插件 → 已安装 → 开发者工具」，点击「从模板创建」，填写同样三项，再选择本地 fork 的 `plugins` 目录。要按本例试装，可用日期倒计时模板中的 `cover.png` 替换生成的封面。两种方式的目录结构相同。
 
 ```text
-plugins/xiaoming.payday/
+plugins/xiaoming.date-countdown/
 ├── plugin.json
 ├── main.js
 ├── cover.png
 └── LICENSE
 ```
 
-- 插件 ID 须与目录同名，至少有两个用点分隔的部分，每部分以小写字母开头，其余可用小写字母、数字和连字符，总长最多 64 字符。设置默认值可在 `plugin.json` 中修改，首版可用 `1.0.0`。
+- 插件 ID 须与目录同名，至少有两个用点分隔的部分，每部分以小写字母开头，其余可用小写字母、数字和连字符，总长最多 64 字符。首版可用 `1.0.0`。
+- 在 `plugin.json` 的 `settings` 中，将 `title` 的 `default` 设为「项目截止」，将 `target` 的 `default` 设为要倒计时的日期，格式为 `YYYY-MM-DD`。
 - 在 `main.js` 里修改卡片逻辑。模板的 `refresh` 读取用户设置和当天日期，返回要显示的 `card` 和要保留的 `storage`。待办卡片模板使用 `api: 1`、`runtime: "js"`、`owner: "tasks"` 和空的 `permissions`。
 - 将投稿封面保存为 `cover.png`，使用与插件功能相符且有权分发的图片。封面须为 PNG，建议 16:9，最多 256 KiB，宽高最多 1920 × 1080。封面、名称和 README 的写法可参照[官方插件风格](official-style.md)。
 - 复用模板代码时保留原来的 MIT 版权和许可。投稿可附带 `README.md`、`LICENSE` 或 `LICENSE.txt`。PR 的文件范围限定为 `plugins/<插件 ID>/` 下的允许文件。
@@ -26,7 +29,7 @@ plugins/xiaoming.payday/
 ## 2. 试装并校验
 
 1. 在同一个「开发者工具」面板点击「安装本地插件…」，选择新目录里的 `plugin.json`。旧版作者测试版的入口是「设置 → 插件 → 我的插件 → 开发者模式」。
-2. 回到「已安装」启用插件。确认待办页已开启，在「待办与置物」改一次名称和日期，再打开岛上的待办页，核对卡片内容。
+2. 回到「已安装」启用插件。确认待办页已开启，在「待办与置物」修改「倒计时名称」和「目标日期」，再打开岛上的待办页，核对卡片显示的名称和天数。
 3. 修改源码后，选择「保留数据」卸载，再从同一个 `plugin.json` 路径安装并启用，核对原设置和新效果。
 4. 在「开发者工具」点「本地校验」，选择同一个 `plugin.json`。校验通过后，把结果写进 PR。
 
@@ -34,7 +37,7 @@ plugins/xiaoming.payday/
 
 ```powershell
 $island = 'D:/你的目录/daozai.exe'
-$manifest = (Resolve-Path './plugins/xiaoming.payday/plugin.json').Path
+$manifest = (Resolve-Path './plugins/xiaoming.date-countdown/plugin.json').Path
 & $island --plugin-test $manifest | Out-Host
 $LASTEXITCODE
 ```
@@ -43,7 +46,7 @@ $LASTEXITCODE
 
 1. 在 GitHub Desktop 检查变更，提交并推送投稿分支到自己的 fork。
 2. 在岛仔插件仓点 **Pull requests → New pull request → compare across forks**。目标仓库选择 `Renly1994/xiaotang-daozai-plugins` 的 `main`，来源选择自己的 fork 和投稿分支。[GitHub 跨 fork 提交说明](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork)
-3. 填写 PR 自带的模板，包括插件 ID、版本、功能、使用的数据及权限、试装步骤和校验结果。核对代码和封面的许可后，勾选分发授权。标题示例为「投稿：发薪倒计时 1.0.0」。
+3. 填写 PR 自带的模板，包括插件 ID、版本、功能、使用的数据及权限、试装步骤和校验结果。核对代码和封面的许可后，勾选分发授权。标题示例为「投稿：日期倒计时 1.0.0」。
 4. 查看 PR 上的校验结果和审核意见。有修改时，继续推送到这条 PR 的分支，GitHub 会更新原 PR。
 
 合并后，维护者登记反馈接收账号，打包并同步到 Gitee，验证 ZIP 和统计登记后更新集市目录。用户打开对应频道的插件集市即可安装。
@@ -62,7 +65,7 @@ $LASTEXITCODE
 沿用上方 PowerShell 命令里的 `$island` 和 `$manifest`。用一个试用配置，先将旧版提交到本地目录，从「开发者工具 → 导入测试集市目录…」选择生成的 `catalog.json`，安装、启用并保存测试设置。
 
 ```powershell
-$trial = Join-Path $env:LOCALAPPDATA 'DaozaiPluginTrial/xiaoming.payday'
+$trial = Join-Path $env:LOCALAPPDATA 'DaozaiPluginTrial/xiaoming.date-countdown'
 New-Item -ItemType Directory -Force -Path $trial | Out-Null
 $version = (Get-Content -Raw -Encoding UTF8 $manifest | ConvertFrom-Json).version
 $bundle = Join-Path $trial "draft-$version.zip"
@@ -97,7 +100,7 @@ if ($LASTEXITCODE -eq 0) {
 我有权使用的封面文件：
 本次是首版，还是更新已有插件：
 
-首版请从 templates/payday-countdown 复制一份到 plugins/<插件 ID>。
+首版请从 templates/date-countdown 复制一份到 plugins/<插件 ID>。
 更新请沿用已有插件 ID，按上游版本提高版本号，并保留兼容的设置。
 检查清单、代码和封面，运行岛仔的 --plugin-test，给出实际结果和手动试装步骤。
 按 .github/pull_request_template.md 写好 PR 草稿，把分发授权留给我核对。
