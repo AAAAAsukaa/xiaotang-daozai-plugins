@@ -1,8 +1,12 @@
 """用主分支的维护者登记核验投稿，并对 PR 当前提交报告结果。"""
 import json
 import os
-from pathlib import Path
 import subprocess
+from email.utils import parsedate_to_datetime
+from pathlib import Path
+from time import sleep, time
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from submission import ROOT, changed_paths, check_pull_request, git
 
@@ -72,6 +76,70 @@ def read_comments(repo, number):
         yield from page
 
 
+def retry_wait(headers, delay, rate_limited):
+    after = headers.get("Retry-After")
+    if after:
+        try:
+            seconds = int(after) if after.isdecimal() else parsedate_to_datetime(after).timestamp() - time()
+        except (ValueError, TypeError, OverflowError):
+            seconds = 60
+        return max(delay, seconds)
+    reset = headers.get("X-RateLimit-Reset", "")
+    if headers.get("X-RateLimit-Remaining") == "0" and reset.isdecimal():
+        return max(delay, int(reset) - time())
+    return 60 * delay if rate_limited else delay
+
+
+def complete_check(repo, check_id, token, conclusion, summary):
+    request = Request(
+        f"https://api.github.com/{repo}/check-runs/{check_id}",
+        method="PATCH",
+        data=json.dumps({
+            "conclusion": conclusion,
+            "output": {"title": CHECK_NAME, "summary": summary},
+        }).encode("utf-8"),
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "daozai-plugin-approval",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    sleep(1)
+    for delay in (1, 2, 4, None):
+        try:
+            with urlopen(request, timeout=15):
+                return
+        except HTTPError as error:
+            with error:
+                status = error.code
+                headers = error.headers
+                request_id = headers.get("X-GitHub-Request-Id", "未知")
+                detail = f"HTTP {status}，GitHub 请求 ID {request_id}"
+                rate_limited = status == 429 or (
+                    status == 403 and (
+                        headers.get("Retry-After")
+                        or headers.get("X-RateLimit-Remaining") == "0"
+                        or b"rate limit" in error.read(2048).lower()
+                    )
+                )
+                if not (rate_limited or status in (404, 408) or 500 <= status < 600):
+                    delay = None
+                if delay is not None:
+                    delay = retry_wait(headers, delay, rate_limited)
+        except (URLError, TimeoutError) as error:
+            detail = f"网络异常（{type(getattr(error, 'reason', error)).__name__}）"
+
+        message = f"检查 {check_id} 的结论回写失败（{detail}）"
+        if delay is None:
+            raise RuntimeError(message) from None
+        if delay > 60:
+            raise RuntimeError(f"{message}，下次等待 {delay:g} 秒，超过本次重试上限。") from None
+        print(f"{message}，{delay:g} 秒后自动重试。", flush=True)
+        sleep(delay)
+
+
 def main():
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
     subject = event.get("pull_request") or event.get("issue") or event.get("inputs")
@@ -104,10 +172,7 @@ def main():
     else:
         conclusion, summary = "success", "投稿检查通过。"
 
-    api(f"{repo}/check-runs/{check['id']}", token=app_token, method="PATCH", data={
-        "conclusion": conclusion,
-        "output": {"title": CHECK_NAME, "summary": summary},
-    })
+    complete_check(repo, check["id"], app_token, conclusion, summary)
 
 
 if __name__ == "__main__":
