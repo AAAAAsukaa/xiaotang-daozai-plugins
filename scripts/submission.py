@@ -108,11 +108,17 @@ def read_plugin(repo, commit, plugin_id):
     return manifest, files
 
 
-def check_pull_request(base, head):
+def changed_paths(base, head):
     fork = git(ROOT, "merge-base", base, head).decode().strip()
     changed = git(ROOT, "diff", "--name-only", "-z", "--no-renames", fork, head)
+    return list(filter(None, changed.decode().split("\0")))
+
+
+def check_pull_request(base, head, paths=None):
     ids = set()
-    for path in filter(None, changed.decode().split("\0")):
+    if paths is None:
+        paths = changed_paths(base, head)
+    for path in paths:
         parts = path.split("/")
         if len(parts) != 3 or parts[0] != "plugins":
             raise ValueError(f"投稿 PR 只能修改插件目录：{path}")
@@ -126,6 +132,7 @@ def check_pull_request(base, head):
             if version(manifest["version"]) <= version(previous["version"]):
                 raise ValueError(f"{plugin_id} 必须提交高于主分支的版本")
         print(f"{plugin_id} {manifest['version']} 静态检查通过")
+    return ids
 
 
 if __name__ == "__main__":

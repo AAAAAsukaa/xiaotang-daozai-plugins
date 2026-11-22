@@ -1,23 +1,50 @@
 name: 插件投稿校验
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: PR 编号
+        required: true
+        type: number
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 jobs:
-  submission:
-    name: 静态校验
+  check:
+    name: 核验插件投稿
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'issue_comment' ||
+        (github.event.issue.pull_request &&
+          (startsWith(github.event.comment.body, '授权更新 ') ||
+           startsWith(github.event.changes.body.from, '授权更新 '))))
+    concurrency:
+      group: plugin-approval-${{ github.event.pull_request.number || github.event.issue.number || inputs.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # 此环境的凭据仅允许 main 分支使用。
+    environment: plugin-approval
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: refs/heads/main
           fetch-depth: 0
           persist-credentials: false
-      - name: 校验投稿文件
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc
+        id: approval-app
+        with:
+          client-id: ${{ vars.PLUGIN_APPROVAL_CLIENT_ID }}
+          private-key: ${{ secrets.PLUGIN_APPROVAL_PRIVATE_KEY }}
+          permission-checks: write
+      - name: 校验变更和维护者授权
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          git fetch --no-tags origin "refs/pull/$PR_NUMBER/head"
-          python3 scripts/submission.py "$BASE_SHA" FETCH_HEAD
+          GH_TOKEN: ${{ github.token }}
+          PLUGIN_APPROVAL_TOKEN: ${{ steps.approval-app.outputs.token }}
+        run: python3 scripts/plugin_approval.py
