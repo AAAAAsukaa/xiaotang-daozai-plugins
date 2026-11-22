@@ -1,0 +1,15 @@
+{
+  "colors": {
+    "music": "#FA3E72",
+    "focus": "#FF8A30",
+    "health": "#2FB35A",
+    "shelf": "#5B6EE1",
+    "tasks": "#23C575",
+    "mail": "#14A3A3",
+    "quota": "#3D8F65",
+    "calendar": "#F08A24",
+    "weather": "#4C9BE8",
+    "performance": "#207C80",
+    "wireless": "#4EBBFF"
+  }
+}
