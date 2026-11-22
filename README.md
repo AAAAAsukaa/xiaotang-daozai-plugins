@@ -4,7 +4,7 @@
 
 ## 插件投稿
 
-在 GitHub 上复刻（Fork）本仓库，参考开发模板制作插件。使用岛仔作者测试版完成试装和校验后，向本仓库的 `main` 分支提交拉取请求（PR）。[作者投稿指南](docs/author-submission.md) · [插件开发模板](templates/payday-countdown/) · [使用 AI 辅助投稿](docs/author-submission.md#让-ai-帮忙准备投稿)
+在 GitHub 上复刻（Fork）本仓库，参考开发模板制作插件。使用岛仔作者测试版完成试装和校验后，向本仓库的 `main` 分支提交拉取请求（PR）。[作者投稿指南](docs/author-submission.md) · [插件开发模板](templates/date-countdown/) · [使用 AI 辅助投稿](docs/author-submission.md#让-ai-帮忙准备投稿)
 
 ## 问题反馈
 
