@@ -20,7 +20,7 @@ plugins/xiaoming.payday/
 
 - 插件 ID 须与目录同名，至少有两个用点分隔的部分，每部分以小写字母开头，其余可用小写字母、数字和连字符，总长最多 64 字符。设置默认值可在 `plugin.json` 中修改，首版可用 `1.0.0`。
 - 在 `main.js` 里修改卡片逻辑。模板的 `refresh` 读取用户设置和当天日期，返回要显示的 `card` 和要保留的 `storage`。待办卡片模板使用 `api: 1`、`runtime: "js"`、`owner: "tasks"` 和空的 `permissions`。
-- 将投稿封面保存为 `cover.png`，使用与插件功能相符且有权分发的图片。封面须为 PNG，建议 16:9，最多 256 KiB，宽高最多 1920 × 1080。
+- 将投稿封面保存为 `cover.png`，使用与插件功能相符且有权分发的图片。封面须为 PNG，建议 16:9，最多 256 KiB，宽高最多 1920 × 1080。封面、名称和 README 的写法可参照[官方插件风格](official-style.md)。
 - 复用模板代码时保留原来的 MIT 版权和许可。投稿可附带 `README.md`、`LICENSE` 或 `LICENSE.txt`。PR 的文件范围限定为 `plugins/<插件 ID>/` 下的允许文件。
 
 ## 2. 试装并校验
