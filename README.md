@@ -2,9 +2,7 @@
 
 ## 投稿
 
-将插件放在 `plugins/<插件 ID>/`，提交 `plugin.json`、`main.js` 和 `cover.png`，并可附上 `README.md` 与许可证文件。插件 ID 与清单一致。封面使用 PNG，建议 16:9，大小最多 256 KiB，宽高最多 1920 × 1080。[GitHub 投稿仓](https://github.com/Renly1994/xiaotang-daozai-plugins)
-
-在 Windows 上用岛仔的 `--plugin-test` 校验并试装，通过后向 `main` 提 PR，填写用途、版本、权限、验证方式、许可和镜像授权。每次更新递增三段式版本号并单独提交 PR。仓库 CI 检查投稿文件和版本，维护者审核行为、授权及本地运行结果。
+从发薪倒计时模板开始，在岛仔作者测试版试装，再用自己的 GitHub fork 向本仓库的 `main` 提 PR。[作者投稿指南](docs/author-submission.md) · [可复制模板](templates/payday-countdown/) · [让 AI 帮忙准备投稿](docs/author-submission.md#让-ai-帮忙准备投稿)
 
 ## 反馈
 
