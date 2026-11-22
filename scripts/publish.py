@@ -102,6 +102,18 @@ def daozai(island, *args):
     subprocess.run([str(island), *map(str, args)], check=True)
 
 
+def is_official(commit, plugin_id):
+    path = ".github/official-plugins.json"
+    if not git(ROOT, "ls-tree", commit, "--", path):
+        return False
+    ids = json.loads(git(ROOT, "show", f"{commit}:{path}"))
+    if not isinstance(ids, list) or any(
+        not isinstance(item, str) or len(item) > 64 or not PLUGIN_ID.fullmatch(item) for item in ids
+    ):
+        raise ValueError("官方插件登记必须是插件 ID 列表")
+    return plugin_id in ids
+
+
 def pack_reviewed(workspace, island, plugin_id):
     git(ROOT, "fetch", "origin", "refs/heads/main")
     commit = git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip()
@@ -110,16 +122,31 @@ def pack_reviewed(workspace, island, plugin_id):
     login = maintainers.get(plugin_id) if isinstance(maintainers, dict) else None
     if not isinstance(login, str) or len(login) > 39 or not LOGIN.fullmatch(login):
         raise ValueError(f"请在 GitHub 主分支的 .github/plugin-maintainers.json 登记 {plugin_id} 的维护者账号后再上架")
+    official = is_official(commit, plugin_id)
     source = workspace / "package"
     source.mkdir()
     for name, data in files.items():
         (source / name).write_bytes(data)
     bundle = workspace / "bundle.zip"
     daozai(island, "--plugin-pack", source / "plugin.json", bundle)
-    return commit, manifest["version"], bundle
+    return commit, manifest["version"], bundle, official
 
 
-def stage_catalog(bundle, staged, original, island, plugin_id, current, data):
+def mark_official(index, plugin_id):
+    catalog = json.loads(index)
+    entry = next(entry for entry in catalog["plugins"] if entry["id"] == plugin_id)
+    details = entry.get("presentation") or {}
+    if details.get("official") is True:
+        return index
+    details["official"] = True
+    entry["presentation"] = details
+    index = json.dumps(catalog, ensure_ascii=False, indent=2).encode("utf-8")
+    if len(index) > CATALOG_LIMIT:
+        raise ValueError("集市目录超出大小限制")
+    return index
+
+
+def stage_catalog(bundle, staged, original, island, plugin_id, current, data, official=False):
     if original is not None:
         previous = next(
             (entry for entry in json.loads(original)["plugins"] if entry["id"] == plugin_id),
@@ -129,10 +156,12 @@ def stage_catalog(bundle, staged, original, island, plugin_id, current, data):
             if (previous["version"] != current or previous["size"] != len(data)
                     or previous["sha256"] != hashlib.sha256(data).hexdigest()):
                 raise ValueError("已上架版本不可覆盖，发布新包须提高版本号")
-            return None
+            index = mark_official(original, plugin_id) if official else original
+            return index if index != original else None
         staged.write_bytes(original)
     daozai(island, "--plugin-submit", bundle, staged)
-    return staged.read_bytes()
+    index = staged.read_bytes()
+    return mark_official(index, plugin_id) if official else index
 
 
 def read_mirror_file(path, limit):
@@ -180,7 +209,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False)
     base_url = publish_origin(mirror_url)
     with tempfile.TemporaryDirectory(prefix="daozai-market-") as temporary:
         workspace = Path(temporary)
-        commit, current, bundle = pack_reviewed(workspace, island, plugin_id)
+        commit, current, bundle, official = pack_reviewed(workspace, island, plugin_id)
         zip_name = f"plugin-{plugin_id}-{current}.zip"
         zip_remote = f"{channel}/{zip_name}"
         catalog_remote = f"{channel}/catalog.json"
@@ -205,7 +234,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False)
         if previous_zip is not None and previous_zip != data:
             raise ValueError("该版本已有不同的安装包，请提高版本号")
         index = stage_catalog(bundle, workspace / "catalog.json", original, island,
-                              plugin_id, current, data)
+                              plugin_id, current, data, official=official)
         if index is None:
             verify_public_package(base_url, zip_remote, data)
             if registration is not None:

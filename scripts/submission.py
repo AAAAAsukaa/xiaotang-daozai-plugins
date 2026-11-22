@@ -9,7 +9,17 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ID = re.compile(r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+")
 VERSION = re.compile(r"(?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){2}")
-PACKAGE_FILES = {"plugin.json": 32 * 1024, "main.js": 256 * 1024, "cover.png": 256 * 1024}
+PACKAGE_FILES = {
+    "plugin.json": 32 * 1024,
+    "main.js": 256 * 1024,
+    "shortcuts.json": 4 * 1024,
+    "cover.png": 256 * 1024,
+}
+SHORTCUT_PAGES = {
+    "music", "focus", "health", "shelf", "tasks", "mail", "quota", "calendar",
+    "weather", "performance", "wireless",
+}
+SHORTCUT_COLOR = re.compile(r"#[0-9A-Fa-f]{6}")
 OPTIONAL_FILES = {"README.md", "LICENSE", "LICENSE.txt"}
 
 
@@ -37,6 +47,17 @@ def check_cover(cover):
         raise ValueError("封面尺寸必须小于或等于 1920 × 1080")
 
 
+def check_shortcuts(raw):
+    data = json.loads(raw.decode("utf-8"))
+    if not isinstance(data, dict) or data.keys() != {"colors"}:
+        raise ValueError("shortcuts.json 必须只包含 colors")
+    colors = data["colors"]
+    if not isinstance(colors, dict) or not colors or colors.keys() - SHORTCUT_PAGES:
+        raise ValueError("请至少为一个已知功能页设置配色")
+    if any(not isinstance(color, str) or not SHORTCUT_COLOR.fullmatch(color) for color in colors.values()):
+        raise ValueError("快捷切换配色必须使用 #RRGGBB 格式")
+
+
 def read_plugin(repo, commit, plugin_id):
     if len(plugin_id) > 64 or not PLUGIN_ID.fullmatch(plugin_id):
         raise ValueError(f"插件 ID 无效：{plugin_id}")
@@ -54,7 +75,7 @@ def read_plugin(repo, commit, plugin_id):
             raise ValueError(f"{prefix}{name} 超出大小限制")
         if name in PACKAGE_FILES:
             files[name] = git(repo, "cat-file", "blob", oid)
-    if missing := PACKAGE_FILES.keys() - files.keys():
+    if missing := {"plugin.json", "cover.png"} - files.keys():
         raise ValueError(f"{plugin_id} 缺少文件：{', '.join(sorted(missing))}")
     manifest = json.loads(files["plugin.json"].decode("utf-8"))
     if not isinstance(manifest, dict) or manifest.get("id") != plugin_id:
@@ -64,12 +85,24 @@ def read_plugin(repo, commit, plugin_id):
         value = manifest.get(field)
         if not isinstance(value, str) or not value.strip() or len(value) > 80:
             raise ValueError(f"清单 {field} 必须为 1 至 80 字符的非空名称")
-    required = {"api": 1, "runtime": "js", "owner": "tasks", "entry": "main.js",
-                "cover": "cover.png", "permissions": {}}
+    required = {"api": 1, "cover": "cover.png", "permissions": {}}
+    if manifest.get("runtime") == "assets":
+        entry = "shortcuts.json"
+        required.update(runtime="assets", owner="pages", entry=entry, dataVersion=1,
+                        settings=[], capabilities=["navigation.shortcuts"])
+    else:
+        entry = "main.js"
+        required.update(runtime="js", owner="tasks", entry=entry)
     for key, value in required.items():
         if type(manifest.get(key)) is not type(value) or manifest[key] != value:
-            raise ValueError(f"清单 {key} 与集市支持的待办卡片格式不符")
-    if not files["main.js"].decode("utf-8").strip():
+            raise ValueError(f"清单 {key} 与 {entry} 对应的插件格式不符")
+    if entry not in files:
+        raise ValueError(f"{plugin_id} 缺少文件：{entry}")
+    if extra := files.keys() - {"plugin.json", "cover.png", entry}:
+        raise ValueError(f"{plugin_id} 出现未使用的入口：{', '.join(sorted(extra))}")
+    if entry == "shortcuts.json":
+        check_shortcuts(files[entry])
+    elif not files[entry].decode("utf-8").strip():
         raise ValueError("main.js 不能为空")
     check_cover(files["cover.png"])
     return manifest, files

@@ -10,7 +10,7 @@
 
 ## 发布
 
-审核并合并后，发布脚本核对插件已登记维护者，再用启用了插件作者命令的岛仔构建安装包。镜像仓须已初始化默认分支，Git 使用维护者现有的 Gitee 凭据。先将现有样包发布到 `preview` 目录验收，正式上架使用 `stable` 目录。
+审核并合并后，发布脚本核对插件已登记维护者，再用启用了插件作者命令的岛仔构建安装包。镜像仓须已初始化默认分支，Git 使用维护者现有的 Gitee 凭据。先将现有样包发布到 `preview` 目录验收，正式上架使用 `stable` 目录。「官方」标识按同一审定提交中的 `.github/official-plugins.json` 登记。
 
 ```powershell
 python scripts/publish.py example.payday --island 'D:/路径/daozai.exe' --mirror 'https://gitee.com/xiaotangtoken/xiaotang-daozai-plugins.git' --channel preview
