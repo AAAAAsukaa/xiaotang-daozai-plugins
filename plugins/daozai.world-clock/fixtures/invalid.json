@@ -1,0 +1,7 @@
+{
+  "now": 1795500300000,
+  "settings": {
+    "cities": "[{\"name\":\"时区默认名\",\"zone\":\"Not/AZone\"},{\"name\":\"时区默认名\",\"zone\":\"America/New_York\"}]",
+    "pinned_city": "first"
+  }
+}
