@@ -1,0 +1,8 @@
+{
+  "now": 1795500000000,
+  "settings": {
+    "cities": "[{\"name\":\"时区默认名\",\"zone\":\"Asia/Kolkata\"},{\"name\":\"时区默认名\",\"zone\":\"Asia/Kathmandu\"}]",
+    "pinned_city": "selected"
+  },
+  "storage": {"zone": "Asia/Kathmandu", "name": "加德满都", "setting": "selected"}
+}

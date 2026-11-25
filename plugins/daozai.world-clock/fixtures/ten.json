@@ -1,0 +1,8 @@
+{
+  "now": 1795500300000,
+  "settings": {
+    "cities": "[{\"name\":\"时区默认名\",\"zone\":\"America/New_York\"},{\"name\":\"时区默认名\",\"zone\":\"Europe/London\"},{\"name\":\"时区默认名\",\"zone\":\"Europe/Paris\"},{\"name\":\"时区默认名\",\"zone\":\"Asia/Dubai\"},{\"name\":\"时区默认名\",\"zone\":\"Europe/Moscow\"},{\"name\":\"时区默认名\",\"zone\":\"Asia/Singapore\"},{\"name\":\"时区默认名\",\"zone\":\"Asia/Tokyo\"},{\"name\":\"时区默认名\",\"zone\":\"Asia/Seoul\"},{\"name\":\"时区默认名\",\"zone\":\"Australia/Sydney\"},{\"name\":\"时区默认名\",\"zone\":\"America/Los_Angeles\"}]",
+    "pinned_city": "selected"
+  },
+  "storage": {"zone": "Australia/Sydney", "name": "悉尼", "setting": "selected"}
+}

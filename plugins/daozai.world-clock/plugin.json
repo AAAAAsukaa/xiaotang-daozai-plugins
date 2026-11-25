@@ -1,0 +1,44 @@
+{
+  "id": "daozai.world-clock",
+  "name": "世界时钟",
+  "author": "岛仔",
+  "version": "1.0.0",
+  "api": 1,
+  "runtime": "js",
+  "entry": "main.js",
+  "cover": "cover.png",
+  "owner": "status",
+  "capabilities": ["status.page", "status.canvas", "settings", "timer", "island.pinned", "action", "storage"],
+  "refreshSeconds": 60,
+  "dataVersion": 1,
+  "permissions": {},
+  "timezones": true,
+  "data": ["city-names.json"],
+  "settings": [
+    {
+      "key": "cities",
+      "label": "城市",
+      "type": "list",
+      "default": "[{\"name\":\"北京\",\"zone\":\"Asia/Shanghai\"},{\"name\":\"伦敦\",\"zone\":\"Europe/London\"},{\"name\":\"纽约\",\"zone\":\"America/New_York\"}]",
+      "maxItems": 10,
+      "item": [
+        {"key":"name","label":"显示名（可用时区默认名）","type":"text","default":"时区默认名"},
+        {"key":"zone","label":"时区","type":"timezone","default":"Asia/Shanghai"}
+      ]
+    },
+    {
+      "key": "pinned_city",
+      "label": "常驻城市",
+      "type": "choice",
+      "default": "selected",
+      "choices": [
+        {"label":"列表第一项","value":"first"},
+        {"label":"页面选中的城市","value":"selected"}
+      ]
+    }
+  ],
+  "statusLayout": {
+    "components": [{"type":"canvas"}],
+    "style": {"icon":"clock","surface":"plain"}
+  }
+}

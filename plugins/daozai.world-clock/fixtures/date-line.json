@@ -1,0 +1,7 @@
+{
+  "now": 1795519800000,
+  "settings": {
+    "cities": "[{\"name\":\"时区默认名\",\"zone\":\"Pacific/Auckland\"},{\"name\":\"国际日期变更线东侧\",\"zone\":\"Etc/GMT+12\"}]",
+    "pinned_city": "first"
+  }
+}
