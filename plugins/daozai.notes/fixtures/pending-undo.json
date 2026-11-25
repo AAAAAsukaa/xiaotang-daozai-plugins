@@ -1,0 +1,40 @@
+{
+  "now": 1795500300000,
+  "storage": {
+    "notes": [
+      {
+        "id": "n-3",
+        "text": "周五前把报价单发给阿杰\n记得抄送财务，附上 10 月的对账单和发票号。",
+        "color": "#FFE58A",
+        "source": "handwritten",
+        "pinned": 1795493300,
+        "done_at": null,
+        "created_at": 1795490400
+      },
+      {
+        "id": "n-2",
+        "text": "完成一次专注 · 25 分钟",
+        "color": "#FF8A7A",
+        "source": "focus",
+        "pinned": null,
+        "done_at": null,
+        "created_at": 1795488480
+      },
+      {
+        "id": "n-1",
+        "text": "会议室 B 改到 3 楼",
+        "color": "#8FD3F5",
+        "source": "pasted",
+        "pinned": 1795491500,
+        "done_at": 1795500300,
+        "created_at": 1795482720
+      }
+    ],
+    "next_id": 4,
+    "current": "n-3",
+    "pending": {
+      "id": "n-1",
+      "until": 1795500303000
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "daozai.notes",
+  "name": "便签本",
+  "titleAccent": "本",
+  "author": "岛仔",
+  "version": "1.0.0",
+  "api": 1,
+  "runtime": "js",
+  "entry": "main.js",
+  "cover": "cover.png",
+  "owner": "status",
+  "capabilities": ["status.page", "status.canvas", "action", "event", "storage", "island.pinned", "settings", "timer"],
+  "events": ["focus.finished"],
+  "dataVersion": 1,
+  "permissions": {},
+  "refreshSeconds": 60,
+  "settings": [
+    {"key": "pin_mode", "label": "常驻便签", "type": "choice", "default": "latest", "choices": [{"value": "specified", "label": "指定一张"}, {"value": "latest", "label": "最新一张"}, {"value": "rotate", "label": "置顶轮播"}]}
+  ],
+  "statusLayout": {
+    "components": [{"type": "canvas"}, {"type": "alert"}, {"type": "fields"}, {"type": "actions"}],
+    "canvasFields": [
+      {"key": "note", "rect": [4, 207, 130, 22], "placeholder": "记一笔…", "action": "add"},
+      {"key": "search", "rect": [202, 7, 182, 24], "placeholder": "搜索便签", "action": "search"},
+      {"key": "edit_note", "rect": [5, 40, 377, 136], "action": "save"}
+    ],
+    "style": {"accent": "#FFD25A", "surface": "plain", "density": "compact"}
+  }
+}
