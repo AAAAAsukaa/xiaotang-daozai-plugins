@@ -1,0 +1,94 @@
+{
+  "now": 1795500300000,
+  "sources": {
+    "usd": {
+      "status": "ready",
+      "text": "{\"xau\":{\"price\":4118.6,\"currency\":\"USD\",\"unit\":\"troy_oz\"},\"data_state\":{\"status\":\"fresh\",\"as_of\":\"2026-11-24T06:04:55Z\"},\"updated_at\":\"2026-11-24T06:05:00Z\",\"fx_stale\":false}"
+    },
+    "cny": {
+      "status": "ready",
+      "text": "{\"xau\":{\"price\":946.2,\"currency\":\"CNY\",\"unit\":\"gram\"},\"data_state\":{\"status\":\"fresh\",\"as_of\":\"2026-11-24T06:04:55Z\"},\"updated_at\":\"2026-11-24T06:05:00Z\",\"fx_stale\":false}"
+    }
+  },
+  "storage": {
+    "usd": {
+      "day": [
+        {
+          "at": 1795496300,
+          "price": 4106.2
+        },
+        {
+          "at": 1795499700,
+          "price": 4112.25
+        }
+      ],
+      "week": [
+        {
+          "at": 1795496300,
+          "price": 4106.2
+        },
+        {
+          "at": 1795499700,
+          "price": 4112.25
+        }
+      ],
+      "month": [
+        {
+          "at": 1795496300,
+          "price": 4106.2
+        },
+        {
+          "at": 1795499700,
+          "price": 4112.25
+        }
+      ],
+      "session": {
+        "date": 20781,
+        "start": 4106.2,
+        "high": 4106.2,
+        "low": 4106.2
+      }
+    },
+    "cny": {
+      "day": [
+        {
+          "at": 1795496300,
+          "price": 943.3
+        },
+        {
+          "at": 1795499700,
+          "price": 944.5
+        }
+      ],
+      "week": [
+        {
+          "at": 1795496300,
+          "price": 943.3
+        },
+        {
+          "at": 1795499700,
+          "price": 944.5
+        }
+      ],
+      "month": [
+        {
+          "at": 1795496300,
+          "price": 943.3
+        },
+        {
+          "at": 1795499700,
+          "price": 944.5
+        }
+      ],
+      "session": {
+        "date": 20781,
+        "start": 943.3,
+        "high": 943.3,
+        "low": 943.3
+      }
+    }
+  },
+  "settings": {
+    "range": "week"
+  }
+}
