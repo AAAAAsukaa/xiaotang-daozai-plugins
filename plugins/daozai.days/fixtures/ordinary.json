@@ -1,0 +1,6 @@
+{
+  "now": 1798084800000,
+  "settings": {
+    "days": "[{\"name\":\"圣诞聚餐\",\"date\":\"2026-12-25\",\"kind\":\"countdown\",\"yearly\":\"false\",\"icon\":\"flag\",\"color\":\"red\",\"pinned_text\":\"默认\"},{\"name\":\"朋友\",\"date\":\"2000-12-28\",\"kind\":\"birthday\",\"yearly\":\"true\",\"icon\":\"cake\",\"color\":\"orange\",\"pinned_text\":\"默认\"}]"
+  }
+}

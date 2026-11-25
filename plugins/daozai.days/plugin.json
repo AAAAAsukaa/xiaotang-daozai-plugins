@@ -1,0 +1,124 @@
+{
+  "id": "daozai.days",
+  "name": "我的日子",
+  "titleAccent": "日子",
+  "author": "岛仔",
+  "version": "1.0.3",
+  "api": 1,
+  "runtime": "js",
+  "entry": "main.js",
+  "cover": "cover.png",
+  "owner": "status",
+  "navigationIcon": {
+    "path": "M6 7H18V15.5L14.5 19H6Z M9 5V8.5 M15 5V8.5 M6 10.5H18 M14.5 19V15.5H18",
+    "background": "#D1584C"
+  },
+  "capabilities": [
+    "calendar.marker",
+    "status.page",
+    "status.canvas",
+    "timer",
+    "settings",
+    "action",
+    "notice",
+    "storage",
+    "island.pinned"
+  ],
+  "refreshSeconds": 3600,
+  "dataVersion": 1,
+  "permissions": {},
+  "data": [
+    "holidays-2026.json",
+    "holidays-2027.json"
+  ],
+  "settings": [
+    {
+      "key": "days",
+      "label": "我的日子",
+      "type": "list",
+      "default": "[]",
+      "maxItems": 20,
+      "item": [
+        {
+          "key": "name",
+          "label": "名称（最多 12 字）",
+          "type": "text",
+          "default": "新日子"
+        },
+        {
+          "key": "date",
+          "label": "日期",
+          "type": "date",
+          "default": "2026-12-31"
+        },
+        {
+          "key": "kind",
+          "label": "类型",
+          "type": "choice",
+          "default": "countdown",
+          "choices": [
+            {
+              "label": "倒数",
+              "value": "countdown"
+            },
+            {
+              "label": "纪念日",
+              "value": "anniversary"
+            },
+            {
+              "label": "生日",
+              "value": "birthday"
+            }
+          ]
+        },
+        {
+          "key": "yearly",
+          "label": "每年重复",
+          "type": "switch",
+          "default": "false"
+        },
+        {
+          "key": "icon",
+          "label": "图标",
+          "type": "icon",
+          "default": "flag"
+        },
+        {
+          "key": "color",
+          "label": "颜色",
+          "type": "color",
+          "default": "red"
+        },
+        {
+          "key": "pinned_text",
+          "label": "常驻文字（最多 24 字）",
+          "type": "text",
+          "default": "默认"
+        }
+      ]
+    },
+    {
+      "key": "pinned_day",
+      "label": "常驻日子（最近的那一天，或填写名称）",
+      "type": "text",
+      "default": "最近的那一天"
+    },
+    {
+      "key": "show_holidays",
+      "label": "显示节假日",
+      "type": "switch",
+      "default": "true"
+    }
+  ],
+  "statusLayout": {
+    "components": [
+      {
+        "type": "canvas"
+      }
+    ],
+    "style": {
+      "icon": "calendar",
+      "accent": "#FF5A4E"
+    }
+  }
+}
