@@ -1,0 +1,49 @@
+{
+  "id": "daozai.live-pay",
+  "name": "实时工资",
+  "titleAccent": "工资",
+  "author": "岛仔",
+  "version": "1.0.0",
+  "api": 1,
+  "runtime": "js",
+  "entry": "main.js",
+  "cover": "cover.png",
+  "owner": "status",
+  "capabilities": ["status.page", "status.canvas", "settings", "timer", "island.pinned", "notice", "storage"],
+  "refreshSeconds": 60,
+  "dataVersion": 1,
+  "permissions": {},
+  "settings": [
+    {"key":"salary","label":"月薪（0 表示未设置）","type":"number","default":"0","min":0,"max":10000000,"step":100,"unit":"元","precision":2},
+    {"key":"start","label":"上班时间","type":"time","default":"09:00"},
+    {"key":"end","label":"下班时间","type":"time","default":"18:00"},
+    {
+      "key": "breaks",
+      "label": "休息时段",
+      "type": "list",
+      "default": "[{\"from\":\"12:00\",\"to\":\"13:30\",\"paid\":\"false\"}]",
+      "maxItems": 4,
+      "item": [
+        {"key":"from","label":"开始","type":"time","default":"12:00"},
+        {"key":"to","label":"结束","type":"time","default":"13:30"},
+        {"key":"paid","label":"计薪","type":"switch","default":"false"}
+      ]
+    },
+    {"key":"days","label":"工作日","type":"weekdays","default":"1,2,3,4,5"},
+    {
+      "key": "pinned_show",
+      "label": "常驻显示",
+      "type": "choice",
+      "default": "amount",
+      "choices": [
+        {"value":"amount","label":"金额"},
+        {"value":"countdown","label":"下班倒计时"},
+        {"value":"alternate","label":"金额和倒计时轮换"}
+      ]
+    }
+  ],
+  "statusLayout": {
+    "components": [{"type":"canvas"}],
+    "style": {"accent":"#3DDC84","surface":"plain"}
+  }
+}
