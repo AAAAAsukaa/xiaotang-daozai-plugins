@@ -1,0 +1,8 @@
+{
+  "id": "daozai.wireless-receivers",
+  "api_version": 1,
+  "version": "1.0.0",
+  "receivers": [
+    { "vid": "046D", "pid": "C542", "name": "罗技 M185 Nano 接收器" }
+  ]
+}
