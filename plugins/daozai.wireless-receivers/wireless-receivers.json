@@ -1,8 +1,10 @@
 {
   "id": "daozai.wireless-receivers",
   "api_version": 1,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "receivers": [
-    { "vid": "046D", "pid": "C542", "name": "罗技 M185 Nano 接收器" }
+    { "vid": "046D", "pid": "C542", "name": "罗技 M185 Nano 接收器" },
+    { "vid": "373B", "pid": "10C9", "name": "VXE 蜻蜓 R1 无线接收器" },
+    { "vid": "391D", "pid": "2A06", "name": "VGN V87 Pro 2.4G 接收器" }
   ]
 }
