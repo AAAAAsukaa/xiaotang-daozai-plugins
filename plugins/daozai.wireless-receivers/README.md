@@ -26,4 +26,10 @@
 | `373B:11FE` | [实物确认接收器 ID；是否为当前 ATK A9 Ultra Max 2.0 反馈中的版本待核实](https://github.com/qu1ncky/BatteryTray/issues/30) |
 | `41E4:2001` | [实物反馈 G87；同 ID 有不同版本](https://github.com/wushuai0802/myfinder-device-battery/issues/379) |
 | `5253:1021` | [MCHOSE A7/A7 Pro 的已报告接收器版本](https://github.com/wushuai0802/myfinder-device-battery/issues/698) |
-| `A8A5:2255` | [实物反馈前行者 X23SE；同 ID 亦用于 X23 Pro 等设备](https://github.com/wushuai0802/myfinder-device-battery/issues/564) |
+| `A8A5:2255` | [狼途 M8 Max 的 2.4G 接收器实测](https://github.com/WXH666-bit/DeskPerch/blob/main/docs/LANGTU-M8.md)；[亦见于前行者 X23SE](https://github.com/wushuai0802/myfinder-device-battery/issues/564) 等型号，显示为通用鼠标接收器。 |
+
+## 真机复测与反馈
+
+兼容包上线后，在岛仔中更新并启用，拔插一次接收器，再看「无线设备」页。重点复测狼途 M8 Max 的 `A8A5:2255`，以及 ATK A9 Ultra Max 2.0 所配接收器是否为 `373B:11FE`。
+
+如果仍未识别，欢迎在[岛仔 #267](https://github.com/Renly1994/xiaotang-daozai/issues/267) 留下完整型号、连接方式、岛仔/兼容包版本和接收器的 `VID_xxxx&PID_xxxx`，不需要设备实例路径、序列号或 MAC。若已识别但没电量，请单独注明。
