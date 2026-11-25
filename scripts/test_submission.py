@@ -162,6 +162,75 @@ def test_rejects_manifest_rules(fields, error):
         submission.check_script(status_manifest(**fields))
 
 
+def test_status_plugin_keeps_calendar_marker_and_navigation_icon(plugin):
+    icon = {"background": "#D1584c", "path": "M6 7H18V15.5L14.5 19H6Z M9 5V8.5 M15 5V8.5"}
+    manifest, files = plugin(fields={
+        "capabilities": ["status.page", "status.canvas", "calendar.marker", "settings"],
+        "titleAccent": "布", "statusLayout": {"components": [{"type": "canvas"}]},
+        "navigationIcon": icon, "data": ["holidays.json"],
+    }, extras={"holidays.json": b"[]"})
+    assert manifest["navigationIcon"] == icon
+    assert "holidays.json" in files
+
+
+@pytest.mark.parametrize("field,fields", [
+    ("calendar.marker", {"owner": "tasks", "capabilities": ["card", "calendar.marker"]}),
+    ("calendar.marker", {"capabilities": ["calendar.marker"]}),
+    ("navigationIcon", {"owner": "tasks", "capabilities": ["card", "status.page"], "navigationIcon": {}}),
+    ("navigationIcon", {"capabilities": ["card"], "navigationIcon": {}}),
+])
+def test_only_independent_status_pages_accept_calendar_marker_and_navigation_icon(field, fields):
+    with pytest.raises(ValueError, match=field):
+        submission.check_script(status_manifest(**fields))
+
+
+@pytest.mark.parametrize("fields", [
+    {"runtime": "assets", "owner": "pages", "entry": "shortcuts.json", "dataVersion": 1,
+     "settings": [], "capabilities": ["navigation.shortcuts"]},
+    material_manifest(),
+])
+def test_non_script_package_rejects_navigation_icon(plugin, fields):
+    with pytest.raises(ValueError, match="navigationIcon"):
+        plugin(fields={**fields, "navigationIcon": {"path": "M0 0 H1", "background": "#112233"}})
+
+
+@pytest.mark.parametrize("path", [
+    "  M0,0 H24 V24 Z   M8 8 Q12 4 16 8",
+    "m2 2, 2 2 h3v.5c1 1 2 2 3 3q-1-1-2-2z h1",
+    "M0\t0\r\nL.5,+1e0 2 3 H24,",
+    "M0 0 H24.00000001",
+    "M0 0" + " L1 1" * 63,
+], ids=["absolute", "relative", "separators", "f32", "segment-limit"])
+def test_navigation_icon_accepts_host_path_syntax(path):
+    submission.check_navigation_icon({"path": path, "background": "#1234aF"})
+
+
+@pytest.mark.parametrize("icon,error", [
+    (None, "path 和 background"),
+    ({"path": "M0 0 H1"}, "path 和 background"),
+    ({"path": "M0 0 H1", "background": "#112233", "extra": True}, "path 和 background"),
+    ({"path": "M0 0 H1", "background": "#fff"}, "#RRGGBB"),
+    ({"path": "", "background": "#112233"}, "须以 M"),
+    ({"path": "M0 0 Z", "background": "#112233"}, "至少需要一条"),
+    ({"path": "M0 0 A1 1 0 0 0 8 8", "background": "#112233"}, "只支持"),
+    ({"path": "M0,,0 H1", "background": "#112233"}, "只支持"),
+    ({"path": "M0 0 Z 1 1", "background": "#112233"}, "只支持"),
+    ({"path": "M0 0 H1　", "background": "#112233"}, "ASCII"),
+    ({"path": "M0 0 H25", "background": "#112233"}, "0 到 24"),
+    ({"path": "M0 0 h-1", "background": "#112233"}, "0 到 24"),
+    ({"path": "M0 0 Q25 3 8 8", "background": "#112233"}, "0 到 24"),
+    ({"path": "M0 0 C1 1 2 -1 8 8", "background": "#112233"}, "0 到 24"),
+    ({"path": "M0 0 H1e999", "background": "#112233"}, "0 到 24"),
+    ({"path": "M0 0 " + "1 1 " * 64, "background": "#112233"}, "最多 64 条"),
+    ({"path": "M0 0 H24" + " " * 1024, "background": "#112233"}, "最多 1024"),
+], ids=["null", "missing", "extra", "color", "empty", "move-only", "arc", "double-comma",
+        "after-close", "non-ascii", "outside", "relative-outside", "quad-control", "cubic-control",
+        "non-finite", "implicit-segment-limit", "length"])
+def test_navigation_icon_rejects_invalid_host_paths(icon, error):
+    with pytest.raises(ValueError, match=error):
+        submission.check_navigation_icon(icon)
+
+
 def test_accepts_title_accent_and_canvas_fields():
     submission.check_script(status_manifest(
         name="便签本", titleAccent="本", capabilities=["status.page", "status.canvas", "action"],

@@ -27,11 +27,16 @@ SHORTCUT_PAGES = {
     "weather", "performance", "wireless",
 }
 SHORTCUT_COLOR = re.compile(r"#[0-9A-Fa-f]{6}")
+NAVIGATION_AXES = {"M": (0, 1), "L": (0, 1), "H": (0,), "V": (1,),
+                   "Q": (0, 1, 0, 1), "C": (0, 1, 0, 1, 0, 1), "Z": ()}
+NAVIGATION_NUMBER = re.compile(
+    r"[ \t\r\n]*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)[ \t\r\n]*,?"
+)
 OPTIONAL_FILES = {"README.md", "LICENSE", "LICENSE.txt"}
 SCRIPT_OWNERS = {"tasks": {"card"}, "status": {"status.page"}}
 SCRIPT_CAPABILITIES = {
     "status.page", "status.canvas", "island.pinned", "action", "event", "notice",
-    "timer", "storage", "settings", "card",
+    "timer", "storage", "settings", "card", "calendar.marker",
 }
 DOMAIN = re.compile(r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
 CONTROL_ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
@@ -193,6 +198,66 @@ def valid_status_text(value):
             and not any(unicodedata.category(char) in {"Cc", "Cs"} for char in value))
 
 
+def check_navigation_icon(icon):
+    if not isinstance(icon, dict) or icon.keys() != {"path", "background"}:
+        raise ValueError("navigationIcon 必须包含 path 和 background")
+    background, path = icon["background"], icon["path"]
+    if not isinstance(background, str) or not SHORTCUT_COLOR.fullmatch(background):
+        raise ValueError("navigationIcon.background 须为 #RRGGBB")
+    if not isinstance(path, str) or not path.isascii() or len(path) > 1024:
+        raise ValueError("navigationIcon.path 最多 1024 个 ASCII 字节")
+    whitespace = " \t\r\n"
+    path = path.lstrip(whitespace)
+    invalid_path = "navigationIcon.path 须以 M 或 m 开始，只支持 M、L、H、V、Q、C、Z"
+    if not path.startswith(("M", "m")):
+        raise ValueError(invalid_path)
+    command = ""
+    current = origin = (0.0, 0.0)
+    draws = False
+    count = 0
+    while path:
+        if path[0].upper() in NAVIGATION_AXES:
+            command, path = path[0], path[1:]
+        elif command.upper() == "Z":
+            raise ValueError(invalid_path)
+        count += 1
+        if count > 64:
+            raise ValueError("navigationIcon.path 最多 64 条命令")
+        kind = command.upper()
+        if kind == "Z":
+            current = origin
+        else:
+            coordinates = []
+            for axis in NAVIGATION_AXES[kind]:
+                match = NAVIGATION_NUMBER.match(path)
+                if match is None:
+                    raise ValueError(invalid_path)
+                path = path[match.end():]
+                value = float(match[1])
+                if not -2000 <= value <= 2000:
+                    raise ValueError("navigationIcon.path 坐标须在 0 到 24 之间")
+                resolved = value + current[axis] if command.islower() else value
+                # 与宿主一样，将相对坐标转换为 f32 后检查最终位置。
+                coordinate, = struct.unpack("<f", struct.pack("<f", resolved))
+                if not 0 <= coordinate <= 24:
+                    raise ValueError("navigationIcon.path 坐标须在 0 到 24 之间")
+                coordinates.append(coordinate)
+            if kind == "H":
+                current = coordinates[0], current[1]
+            elif kind == "V":
+                current = current[0], coordinates[0]
+            else:
+                current = tuple(coordinates[-2:])
+            if kind == "M":
+                origin = current
+                command = "l" if command.islower() else "L"
+            else:
+                draws = True
+        path = path.lstrip(whitespace)
+    if not draws:
+        raise ValueError("navigationIcon.path 至少需要一条直线或曲线")
+
+
 def check_canvas_fields(layout, capabilities):
     fields = layout["canvasFields"]
     if not isinstance(fields, list) or len(fields) > 3:
@@ -255,6 +320,13 @@ def check_script(manifest):
     names = set(capabilities)
     if len(names) != len(capabilities):
         raise ValueError("清单能力重复声明")
+    independent_page = owner == "status" and "status.page" in names
+    if "calendar.marker" in names and not independent_page:
+        raise ValueError("calendar.marker 只适用于声明了 status.page 的独立状态页插件")
+    if "navigationIcon" in manifest:
+        if not independent_page:
+            raise ValueError("navigationIcon 只适用于声明了 status.page 的独立状态页插件")
+        check_navigation_icon(manifest["navigationIcon"])
     for name in ("status.canvas", "action"):
         if name in names and "status.page" not in names:
             raise ValueError(f"{name} 需要同时声明 status.page")
@@ -378,6 +450,8 @@ def read_plugin(repo, commit, plugin_id):
         entry = "main.js"
         required.update(runtime="js", entry=entry)
     if entry != "main.js":
+        if "navigationIcon" in manifest:
+            raise ValueError("navigationIcon 只适用于声明了 status.page 的独立状态页插件")
         if not is_material:
             required["permissions"] = {}
         if {"statusLayout", "titleAccent", "network", "data", "timezones", "minRefreshSeconds", "attribution", "events"} & manifest.keys():
