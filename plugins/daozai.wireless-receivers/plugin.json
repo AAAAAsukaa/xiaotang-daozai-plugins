@@ -1,0 +1,15 @@
+{
+  "id": "daozai.wireless-receivers",
+  "name": "无线设备兼容包",
+  "author": "岛仔",
+  "version": "1.0.0",
+  "api": 1,
+  "runtime": "assets",
+  "entry": "wireless-receivers.json",
+  "cover": "cover.png",
+  "owner": "wireless",
+  "capabilities": ["wireless.receivers"],
+  "dataVersion": 1,
+  "permissions": {},
+  "settings": []
+}
