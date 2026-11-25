@@ -114,31 +114,54 @@ def is_official(commit, plugin_id):
     return plugin_id in ids
 
 
+def official_description(commit, plugin_id):
+    path = ".github/plugin-descriptions.json"
+    if not git(ROOT, "ls-tree", commit, "--", path):
+        return None
+    descriptions = json.loads(git(ROOT, "show", f"{commit}:{path}"))
+    if not isinstance(descriptions, dict) or any(
+        len(key) > 64 or not PLUGIN_ID.fullmatch(key)
+        or not isinstance(description, str) or not description.strip() or len(description) > 1000
+        for key, description in descriptions.items()
+    ):
+        raise ValueError("插件简介登记必须由有效的插件 ID 和 1–1000 字的简介组成")
+    return descriptions.get(plugin_id)
+
+
 def pack_reviewed(workspace, island, plugin_id):
     git(ROOT, "fetch", "origin", "refs/heads/main")
     commit = git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip()
     manifest, files = read_plugin(ROOT, commit, plugin_id)
+    if manifest["runtime"] == "material":
+        raise ValueError("GPU 材质仅接受源码投稿和本地试装，暂不发布到线上集市")
     maintainers = json.loads(git(ROOT, "show", f"{commit}:.github/plugin-maintainers.json"))
     login = maintainers.get(plugin_id) if isinstance(maintainers, dict) else None
     if not isinstance(login, str) or len(login) > 39 or not LOGIN.fullmatch(login):
         raise ValueError(f"请在 GitHub 主分支的 .github/plugin-maintainers.json 登记 {plugin_id} 的维护者账号后再上架")
     official = is_official(commit, plugin_id)
+    description = official_description(commit, plugin_id) if official else None
     source = workspace / "package"
     source.mkdir()
     for name, data in files.items():
-        (source / name).write_bytes(data)
+        path = source / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
     bundle = workspace / "bundle.zip"
     daozai(island, "--plugin-pack", source / "plugin.json", bundle)
-    return commit, manifest["version"], bundle, official
+    return commit, manifest["version"], bundle, official, description
 
 
-def mark_official(index, plugin_id):
+def mark_official(index, plugin_id, description=None):
     catalog = json.loads(index)
     entry = next(entry for entry in catalog["plugins"] if entry["id"] == plugin_id)
     details = entry.get("presentation") or {}
-    if details.get("official") is True:
+    if details.get("official") is True and (
+        description is None or details.get("description") == description
+    ):
         return index
     details["official"] = True
+    if description is not None:
+        details["description"] = description
     entry["presentation"] = details
     index = json.dumps(catalog, ensure_ascii=False, indent=2).encode("utf-8")
     if len(index) > CATALOG_LIMIT:
@@ -146,7 +169,8 @@ def mark_official(index, plugin_id):
     return index
 
 
-def stage_catalog(bundle, staged, original, island, plugin_id, current, data, official=False):
+def stage_catalog(bundle, staged, original, island, plugin_id, current, data,
+                  official=False, description=None):
     if original is not None:
         previous = next(
             (entry for entry in json.loads(original)["plugins"] if entry["id"] == plugin_id),
@@ -156,12 +180,12 @@ def stage_catalog(bundle, staged, original, island, plugin_id, current, data, of
             if (previous["version"] != current or previous["size"] != len(data)
                     or previous["sha256"] != hashlib.sha256(data).hexdigest()):
                 raise ValueError("已上架版本不可覆盖，发布新包须提高版本号")
-            index = mark_official(original, plugin_id) if official else original
+            index = mark_official(original, plugin_id, description) if official else original
             return index if index != original else None
         staged.write_bytes(original)
     daozai(island, "--plugin-submit", bundle, staged)
     index = staged.read_bytes()
-    return mark_official(index, plugin_id) if official else index
+    return mark_official(index, plugin_id, description) if official else index
 
 
 def read_mirror_file(path, limit):
@@ -209,7 +233,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False)
     base_url = publish_origin(mirror_url)
     with tempfile.TemporaryDirectory(prefix="daozai-market-") as temporary:
         workspace = Path(temporary)
-        commit, current, bundle, official = pack_reviewed(workspace, island, plugin_id)
+        commit, current, bundle, official, description = pack_reviewed(workspace, island, plugin_id)
         zip_name = f"plugin-{plugin_id}-{current}.zip"
         zip_remote = f"{channel}/{zip_name}"
         catalog_remote = f"{channel}/catalog.json"
@@ -234,7 +258,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False)
         if previous_zip is not None and previous_zip != data:
             raise ValueError("该版本已有不同的安装包，请提高版本号")
         index = stage_catalog(bundle, workspace / "catalog.json", original, island,
-                              plugin_id, current, data, official=official)
+                              plugin_id, current, data, official=official, description=description)
         if index is None:
             verify_public_package(base_url, zip_remote, data)
             if registration is not None:
