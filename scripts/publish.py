@@ -128,12 +128,13 @@ def official_description(commit, plugin_id):
     return descriptions.get(plugin_id)
 
 
-def pack_reviewed(workspace, island, plugin_id):
+def pack_reviewed(workspace, island, plugin_id, channel):
     git(ROOT, "fetch", "origin", "refs/heads/main")
     commit = git(ROOT, "rev-parse", "FETCH_HEAD").decode().strip()
     manifest, files = read_plugin(ROOT, commit, plugin_id)
-    if manifest["runtime"] == "material":
-        raise ValueError("GPU 材质仅接受源码投稿和本地试装，暂不发布到线上集市")
+    material = manifest["runtime"] == "material"
+    if material and channel != "preview":
+        raise ValueError("GPU 材质仅可发布到 preview 集市")
     maintainers = json.loads(git(ROOT, "show", f"{commit}:.github/plugin-maintainers.json"))
     login = maintainers.get(plugin_id) if isinstance(maintainers, dict) else None
     if not isinstance(login, str) or len(login) > 39 or not LOGIN.fullmatch(login):
@@ -233,7 +234,7 @@ def publish(island, plugin_id, mirror_url, channel, prepare=None, metrics=False)
     base_url = publish_origin(mirror_url)
     with tempfile.TemporaryDirectory(prefix="daozai-market-") as temporary:
         workspace = Path(temporary)
-        commit, current, bundle, official, description = pack_reviewed(workspace, island, plugin_id)
+        commit, current, bundle, official, description = pack_reviewed(workspace, island, plugin_id, channel)
         zip_name = f"plugin-{plugin_id}-{current}.zip"
         zip_remote = f"{channel}/{zip_name}"
         catalog_remote = f"{channel}/catalog.json"

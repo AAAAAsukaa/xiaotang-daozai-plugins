@@ -113,7 +113,7 @@ def test_rejects_invalid_material_submission(plugin, fields, source, extras, err
         plugin(fields=material_manifest(**fields), extras={"sample.wgsl": source, **extras})
 
 
-def test_public_publish_rejects_material_before_packaging(monkeypatch, tmp_path):
+def test_stable_publish_rejects_material_before_packaging(monkeypatch, tmp_path):
     def read_main(_repo, *args):
         if args == ("fetch", "origin", "refs/heads/main"):
             return b""
@@ -123,9 +123,45 @@ def test_public_publish_rejects_material_before_packaging(monkeypatch, tmp_path)
 
     monkeypatch.setattr(publish, "git", read_main)
     monkeypatch.setattr(publish, "read_plugin", lambda *_: (material_manifest(), {}))
-    with pytest.raises(ValueError, match="暂不发布到线上集市"):
-        publish.pack_reviewed(tmp_path, "daozai", ID)
+    with pytest.raises(ValueError, match="仅可发布到 preview"):
+        publish.pack_reviewed(tmp_path, "daozai", ID, "stable")
     assert not (tmp_path / "package").exists()
+
+
+def test_preview_publish_packs_reviewed_material_as_community_plugin(monkeypatch, tmp_path):
+    plugin_id = "cayww.liquid-glass"
+    manifest = status_manifest(**material_manifest(id=plugin_id, author="轻九九九（@cayww）", version="1.0.2"))
+    files = {"plugin.json": json.dumps(manifest, ensure_ascii=False).encode(),
+             "sample.wgsl": WGSL, "cover.png": COVER}
+
+    def read_main(_repo, *args):
+        if args == ("fetch", "origin", "refs/heads/main"):
+            return b""
+        if args == ("rev-parse", "FETCH_HEAD"):
+            return b"reviewed-commit"
+        if args == ("show", "reviewed-commit:.github/plugin-maintainers.json"):
+            return json.dumps({plugin_id: "cayww"}).encode()
+        if args == ("ls-tree", "reviewed-commit", "--", ".github/official-plugins.json"):
+            return b"official-plugins.json"
+        if args == ("show", "reviewed-commit:.github/official-plugins.json"):
+            return json.dumps(["daozai.page-shortcuts"]).encode()
+        pytest.fail(f"材质打包不应继续读取 {args}")
+
+    def read_reviewed(_repo, commit, identifier):
+        assert (commit, identifier) == ("reviewed-commit", plugin_id)
+        return manifest, files
+
+    def pack(island, command, manifest_path, bundle_path):
+        assert (island, command) == ("daozai", "--plugin-pack")
+        assert {path.name: path.read_bytes() for path in manifest_path.parent.iterdir()} == files
+        bundle_path.write_bytes(b"bundle")
+
+    monkeypatch.setattr(publish, "git", read_main)
+    monkeypatch.setattr(publish, "read_plugin", read_reviewed)
+    monkeypatch.setattr(publish, "daozai", pack)
+    commit, version, bundle, official, description = publish.pack_reviewed(tmp_path, "daozai", plugin_id, "preview")
+    assert (commit, version, official, description) == ("reviewed-commit", "1.0.2", False, None)
+    assert bundle.read_bytes() == b"bundle"
 
 
 @pytest.mark.parametrize("owner,capabilities", [
