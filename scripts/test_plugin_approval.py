@@ -61,6 +61,7 @@ class PluginApprovalTests(unittest.TestCase):
             "api": 1,
             "runtime": "js",
             "owner": "tasks",
+            "capabilities": ["card"],
             "entry": "main.js",
             "cover": "cover.png",
             "permissions": {},
