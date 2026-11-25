@@ -1,0 +1,7 @@
+{
+  "now": 1803787200000,
+  "settings": {
+    "show_holidays": "false",
+    "days": "[{\"name\":\"闰日朋友\",\"date\":\"2000-02-29\",\"kind\":\"birthday\",\"yearly\":\"true\",\"icon\":\"cake\",\"color\":\"orange\",\"pinned_text\":\"默认\"}]"
+  }
+}

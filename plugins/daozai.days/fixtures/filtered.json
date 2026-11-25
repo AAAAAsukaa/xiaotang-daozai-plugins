@@ -1,0 +1,9 @@
+{
+  "now": 1795492800000,
+  "settings": {
+    "days": "[{\"name\":\"项目交付\",\"date\":\"2026-12-01\",\"kind\":\"countdown\",\"yearly\":\"false\",\"icon\":\"flag\",\"color\":\"red\",\"pinned_text\":\"默认\"}]"
+  },
+  "storage": {
+    "filter": "holidays"
+  }
+}

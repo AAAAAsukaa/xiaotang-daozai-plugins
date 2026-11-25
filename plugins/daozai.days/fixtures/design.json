@@ -1,0 +1,6 @@
+{
+  "now": 1795500300000,
+  "settings": {
+    "days": "[{\"name\":\"小唐生日\",\"date\":\"2000-01-12\",\"kind\":\"birthday\",\"yearly\":\"true\",\"icon\":\"cake\",\"color\":\"orange\",\"pinned_text\":\"默认\"},{\"name\":\"和小唐在一起\",\"date\":\"2025-06-22\",\"kind\":\"anniversary\",\"yearly\":\"true\",\"icon\":\"heart\",\"color\":\"purple\",\"pinned_text\":\"和小唐在一起 {天数} 天\"}]"
+  }
+}

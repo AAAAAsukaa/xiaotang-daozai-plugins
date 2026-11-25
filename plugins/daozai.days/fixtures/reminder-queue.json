@@ -1,0 +1,7 @@
+{
+  "now": 1795492800000,
+  "settings": {
+    "show_holidays": "false",
+    "days": "[{\"name\":\"小唐\",\"date\":\"2000-11-24\",\"kind\":\"birthday\",\"yearly\":\"true\",\"icon\":\"cake\",\"color\":\"orange\",\"pinned_text\":\"默认\"},{\"name\":\"开工纪念\",\"date\":\"2026-08-16\",\"kind\":\"anniversary\",\"yearly\":\"false\",\"icon\":\"heart\",\"color\":\"purple\",\"pinned_text\":\"默认\"}]"
+  }
+}

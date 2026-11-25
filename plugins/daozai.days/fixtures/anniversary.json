@@ -1,0 +1,8 @@
+{
+  "now": 1795492800000,
+  "settings": {
+    "pinned_day": "开工纪念",
+    "show_holidays": "false",
+    "days": "[{\"name\":\"开工纪念\",\"date\":\"2026-08-16\",\"kind\":\"anniversary\",\"yearly\":\"false\",\"icon\":\"heart\",\"color\":\"purple\",\"pinned_text\":\"{名称}·{天数}天·{日期}·{星期}\"},{\"name\":\"项目交付\",\"date\":\"2026-12-01\",\"kind\":\"countdown\",\"yearly\":\"false\",\"icon\":\"flag\",\"color\":\"red\",\"pinned_text\":\"默认\"}]"
+  }
+}
