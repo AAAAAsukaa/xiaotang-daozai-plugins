@@ -1,0 +1,19 @@
+{
+  "now": 1795500300000,
+  "storage": {
+    "notes": [
+      {
+        "id": "n-1",
+        "text": "会议纪要\n对一下项目里的原始素材\n确认二版的拍摄时间\n请补报价单和服务范围\n整理录音和截图\n同步给今天到会的人\n更新上周的进度表\n记下新的交付时间\n确认回签方式\n把纸质材料收好\n最后一行",
+        "color": "#FFE58A",
+        "source": "handwritten",
+        "pinned": null,
+        "done_at": null,
+        "created_at": 1795490400
+      }
+    ],
+    "current": "n-1",
+    "next_id": 2,
+    "view": "manage"
+  }
+}
